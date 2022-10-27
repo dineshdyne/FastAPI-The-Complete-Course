@@ -14,8 +14,8 @@ class Users(Base):
     last_name = Column(String)
     hashed_password = Column(String)
     is_active = Column(Boolean, default=True)
-    time_created = Column(DateTime(timezone=True), server_default=func.now())
-    time_updated = Column(DateTime(timezone=True), onupdate=func.now())
+    # time_created = Column(DateTime(timezone=True), server_default=func.now())
+    # time_updated = Column(DateTime(timezone=True), onupdate=func.now())
 
     todos = relationship("Todos", back_populates="owner")
 

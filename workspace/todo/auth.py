@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends,HTTPException,status
 from pydantic import BaseModel
 from typing import Optional
+import uvicorn
 import models
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
@@ -10,12 +11,11 @@ from datetime import datetime, timedelta
 from jose import jwt, JWTError
 
 
-SECRET_KEY = "KlgH6AzYDeZeGwD288to79I3vTHT8wp7"
+SECRET_KEY = "jxbeftyjsdxfsdbf"#"KlgH6AzYDeZeGwD288to79I3vTHT8wp7"
 ALGORITHM="HS256"
 
 
 class CreateUser(BaseModel):
-    
     username:str
     email:Optional[str]
     first_name: str
@@ -40,6 +40,12 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+
+@app.get("/users")
+async def read_all(db: Session = Depends(get_db)):
+    return db.query(models.Users).all()
 
 
 def get_password_hash(password):
@@ -71,6 +77,8 @@ def create_access_token(username:str,user_id:int,expires_delta:Optional[timedelt
     encode.update({'exp':expire})
     return jwt.encode(encode,SECRET_KEY,algorithm=ALGORITHM)
 
+
+# oauth2_bearer requests for token validation
 def get_current_user(token:str=Depends(oauth2_bearer)):
     try:
         payload=jwt.decode(token,SECRET_KEY, algorithms=[ALGORITHM])
@@ -101,8 +109,10 @@ async def create_new_user(create_user: CreateUser, db: Session = Depends(get_db)
     db.commit()
     return create_user_model
 
-#"wejhgfbdsmhgv"
 
+
+
+# form_data requests for username password validation
 @app.post("/token")
 async def login_for_access_token(form_data:OAuth2PasswordRequestForm=Depends(),db:Session = Depends(get_db)):
     user=authenticate_user(form_data.username,form_data.password,db)
@@ -133,3 +143,6 @@ def token_exception():
         )
     return token_exception_response
 
+
+# if __name__ == "__main__":
+#     uvicorn.run("auth:app", host="127.0.0.1", port=9000, reload=True)
